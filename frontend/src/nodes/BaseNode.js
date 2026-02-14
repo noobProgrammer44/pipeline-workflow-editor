@@ -1,7 +1,8 @@
 // BaseNode.js
 // Configuration-driven base component for all pipeline nodes.
 
-import { useState, useEffect, useMemo, memo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { Handle, Position } from 'reactflow';
 import { useStore } from '../store';
 import { HandleType, HandlePosition, FieldType } from '../constants';
@@ -44,14 +45,48 @@ const INPUT_STYLE = {
   boxSizing: 'border-box',
 };
 
-const SELECT_STYLE = {
+const SELECT_TRIGGER_STYLE = {
   ...INPUT_STYLE,
   cursor: 'pointer',
   appearance: 'none',
-  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-  backgroundRepeat: 'no-repeat',
-  backgroundPosition: 'right 6px center',
-  paddingRight: 22,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  paddingRight: 8,
+  userSelect: 'none',
+  position: 'relative',
+};
+
+const SELECT_DROPDOWN_BASE = {
+  position: 'fixed',
+  background: '#FFFFFF',
+  borderRadius: 7,
+  border: '1px solid #E2E8F0',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)',
+  padding: 3,
+  zIndex: 1000,
+  maxHeight: 160,
+  overflowY: 'auto',
+  animation: 'contextMenuIn 0.1s ease',
+};
+
+const SELECT_OPTION_STYLE = {
+  display: 'block',
+  width: '100%',
+  padding: '5px 8px',
+  border: 'none',
+  background: 'transparent',
+  borderRadius: 5,
+  fontSize: 12,
+  color: '#1E293B',
+  fontFamily: 'inherit',
+  cursor: 'pointer',
+  textAlign: 'left',
+  transition: 'background 0.1s ease',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  boxSizing: 'border-box',
 };
 
 const TEXTAREA_STYLE = { ...INPUT_STYLE, resize: 'vertical' };
@@ -94,6 +129,156 @@ const DELETE_BTN_STYLE = {
   transition: 'background 0.1s ease',
 };
 
+// ─── Chevron SVG ─────────────────────────────────────────────────────────────
+
+const ChevronDown = (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 9l6 6 6-6" />
+  </svg>
+);
+
+// ─── CustomSelect ────────────────────────────────────────────────────────────
+
+function CustomSelect({ options, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1);
+  const [dropPos, setDropPos] = useState(null);
+  const triggerRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  const normalized = useMemo(
+    () => (options || []).map((o) => (typeof o === 'string' ? { label: o, value: o } : o)),
+    [options],
+  );
+
+  const selectedLabel = normalized.find((o) => o.value === value)?.label || value || '';
+
+  const close = useCallback(() => { setOpen(false); setActiveIdx(-1); setDropPos(null); }, []);
+
+  const openDropdown = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setDropPos({ top: rect.bottom + 3, left: rect.left, width: rect.width });
+    }
+    setOpen(true);
+    setActiveIdx(normalized.findIndex((o) => o.value === value));
+  }, [normalized, value]);
+
+  // Close on outside click — check both trigger and portal dropdown
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (
+        triggerRef.current && !triggerRef.current.contains(e.target) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target)
+      ) {
+        close();
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open, close]);
+
+  const handleKeyDown = (e) => {
+    if (!open) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        openDropdown();
+      }
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIdx((i) => (i < normalized.length - 1 ? i + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIdx((i) => (i > 0 ? i - 1 : normalized.length - 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (normalized[activeIdx]) {
+        onChange(normalized[activeIdx].value);
+      }
+      close();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+    }
+  };
+
+  const dropdown = open && dropPos ? createPortal(
+    <div
+      ref={dropdownRef}
+      style={{
+        ...SELECT_DROPDOWN_BASE,
+        top: dropPos.top,
+        left: dropPos.left,
+        width: dropPos.width,
+      }}
+    >
+      {normalized.map((opt, i) => {
+        const isSelected = opt.value === value;
+        const isActive = i === activeIdx;
+        return (
+          <button
+            key={opt.value}
+            style={{
+              ...SELECT_OPTION_STYLE,
+              background: isActive ? '#F5F3FF' : 'transparent',
+              color: isSelected ? '#7C3AED' : '#1E293B',
+              fontWeight: isSelected ? 600 : 400,
+            }}
+            onMouseEnter={() => setActiveIdx(i)}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              onChange(opt.value);
+              close();
+            }}
+          >
+            {isSelected && (
+              <span style={{ marginRight: 4, fontSize: 10 }}>&#10003;</span>
+            )}
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>,
+    document.body,
+  ) : null;
+
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div
+        ref={triggerRef}
+        tabIndex={0}
+        role="combobox"
+        aria-expanded={open}
+        onClick={() => { if (open) { close(); } else { openDropdown(); } }}
+        onKeyDown={handleKeyDown}
+        style={{
+          ...SELECT_TRIGGER_STYLE,
+          borderColor: open ? '#7C3AED' : '#E2E8F0',
+          background: open ? '#FFFFFF' : '#F8FAFC',
+        }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {selectedLabel}
+        </span>
+        <span style={{
+          display: 'flex',
+          alignItems: 'center',
+          color: '#94A3B8',
+          transition: 'transform 0.15s ease',
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          flexShrink: 0,
+        }}>
+          {ChevronDown}
+        </span>
+      </div>
+      {dropdown}
+    </div>
+  );
+}
+
 // ─── NodeField ────────────────────────────────────────────────────────────────
 
 function NodeField({ field, value, onChange }) {
@@ -102,13 +287,7 @@ function NodeField({ field, value, onChange }) {
       return (
         <div style={FIELD_STYLE}>
           <label style={LABEL_STYLE}>{field.label}:</label>
-          <select value={value} onChange={(e) => onChange(e.target.value)} style={SELECT_STYLE}>
-            {(field.options || []).map((opt) => {
-              const optVal = typeof opt === 'string' ? opt : opt.value;
-              const optLabel = typeof opt === 'string' ? opt : opt.label;
-              return <option key={optVal} value={optVal}>{optLabel}</option>;
-            })}
-          </select>
+          <CustomSelect options={field.options} value={value} onChange={onChange} />
         </div>
       );
 
@@ -187,15 +366,25 @@ function computeHandleOffsets(handles) {
 }
 
 function computeHandleStyles(handles, offsets, color) {
-  return handles.map((h, i) => ({
-    width: 12,
-    height: 12,
-    background: h.type === HandleType.SOURCE ? color : '#CBD5E1',
-    border: '2.5px solid #fff',
-    boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
-    ...(offsets[i] != null ? { top: offsets[i] } : undefined),
-    ...h.style,
-  }));
+  return handles.map((h, i) => {
+    // Center the 12px handle on the node border edge
+    const edgeOffset = {};
+    if (h.position === HandlePosition.LEFT) edgeOffset.left = -6;
+    if (h.position === HandlePosition.RIGHT) edgeOffset.right = -6;
+    if (h.position === HandlePosition.TOP) edgeOffset.top = -6;
+    if (h.position === HandlePosition.BOTTOM) edgeOffset.bottom = -6;
+
+    return {
+      width: 12,
+      height: 12,
+      background: h.type === HandleType.SOURCE ? color : '#CBD5E1',
+      border: '2.5px solid #fff',
+      boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
+      ...edgeOffset,
+      ...(offsets[i] != null ? { top: offsets[i] } : undefined),
+      ...h.style,
+    };
+  });
 }
 
 // ─── BaseNode ─────────────────────────────────────────────────────────────────

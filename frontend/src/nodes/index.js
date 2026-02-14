@@ -418,11 +418,12 @@ export const nodeTypes = Object.fromEntries(
   nodeConfigs.map((config) => [config.type, createNode(config)]),
 );
 
-export const nodeList = nodeConfigs.map(({ type, label, icon, category }) => ({
+export const nodeList = nodeConfigs.map(({ type, label, icon, category, color }) => ({
   type,
   label,
   icon,
   category,
+  color,
 }));
 
 export const NODE_CATEGORIES = [

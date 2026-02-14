@@ -5,12 +5,16 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import ReactFlow, { Controls, Background, MiniMap } from "reactflow";
 import { useStore } from "./store";
 import { shallow } from "zustand/shallow";
-import { nodeTypes } from "./nodes";
+import { nodeTypes, nodeList } from "./nodes";
 import { EdgeType, DRAG_TRANSFER_TYPE } from "./constants";
 import { ContextMenu } from "./ContextMenu";
 import { DeletableEdge } from "./DeletableEdge";
 
 import "reactflow/dist/style.css";
+
+const nodeColorMap = Object.fromEntries(
+  nodeList.map((n) => [n.type, n.color || "#7C3AED"]),
+);
 
 const gridSize = 20;
 const proOptions = { hideAttribution: true };
@@ -219,7 +223,7 @@ export const PipelineUI = () => {
         <Background color="#E2E8F0" gap={gridSize} size={1} />
         <Controls showInteractive={false} />
         <MiniMap
-          nodeColor={() => "#7C3AED"}
+          nodeColor={(node) => nodeColorMap[node.type] || "#7C3AED"}
           maskColor="rgba(248, 250, 252, 0.7)"
           pannable
           zoomable

@@ -61,7 +61,7 @@ Typography: Inter font, 11-15px scale. Spacing: 2-32px scale.
 
 ```
 +-----------------------------------------------------------+
-| [V] Pipeline Name      [Undo][Redo]  [Save][Export][Clear]|  TopBar
+| [V] Pipeline Name  [ Search nodes... ]  [Undo][Redo] |... |  TopBar
 +----------+------------------------------------------------+
 |          |                                                |
 | SIDEBAR  |              CANVAS                            |
@@ -99,10 +99,12 @@ Components: `TopBar.js`, `Sidebar.js`, `ui.js` (canvas), `StatusBar.js`, `Toast.
 - **Selected node glow** — purple ring via CSS
 - **Node hover shadow** — subtle shadow increase on hover
 - **Handle hover** — 1.4x scale with purple halo
+- **Edge deletion** — hover highlights edge (purple), click/select shows red X button at midpoint
+- **Deletable edges** — custom `DeletableEdge` component with invisible wide hover target
 
 ### Node Management
 
-- **Delete button** — X appears in node header on hover
+- **Delete button** — always visible in node header (subtle, darkens on hover)
 - **Delete key** — removes selected nodes (with undo history)
 - **Right-click context menu** — Delete, Duplicate with shortcut hints
 - **Ctrl+D** — duplicate selected nodes (offset 50px)
@@ -120,7 +122,8 @@ Components: `TopBar.js`, `Sidebar.js`, `ui.js` (canvas), `StatusBar.js`, `Toast.
 ### Top Bar
 
 - **Editable pipeline name** — click to edit, Enter to confirm
-- **Undo / Redo buttons** — disabled state when stack is empty
+- **Canvas node search** — searches placed nodes by type label, node ID, and field values; dropdown with icons, keyboard navigation (arrows/Enter/Escape), click to pan+zoom and select
+- **Undo / Redo buttons** — disabled state when stack is empty, with keyboard shortcut hints
 - **Save** — persists to localStorage
 - **Export** — downloads pipeline as JSON file
 - **Clear** — custom confirmation modal, irreversible (wipes undo history)
@@ -147,36 +150,38 @@ Components: `TopBar.js`, `Sidebar.js`, `ui.js` (canvas), `StatusBar.js`, `Toast.
 
 ## Available Node Types
 
+All icons are Lucide-style SVG line art (16x16, 2px stroke, `currentColor`) defined in `nodes/NodeIcons.js`.
+
 ### Core
 | Node | Icon | Color | Description |
 |------|------|-------|-------------|
-| Input | 📥 | `#10B981` | Pipeline input variable (text or file) |
-| LLM | 🤖 | `#7C3AED` | Language model processing (system + prompt) |
-| Output | 📤 | `#3B82F6` | Pipeline output variable (text or image) |
-| Text | 📝 | `#F59E0B` | Static/template text with `{{variable}}` interpolation |
+| Input | Arrow entering container | `#10B981` | Pipeline input variable (text or file) |
+| LLM | AI sparkle | `#7C3AED` | Language model processing (system + prompt) |
+| Output | Arrow leaving container | `#3B82F6` | Pipeline output variable (text or image) |
+| Text | Text lines | `#F59E0B` | Static/template text with `{{variable}}` interpolation |
 
 ### Transform
 | Node | Icon | Color | Description |
 |------|------|-------|-------------|
-| Filter | 🔍 | `#06B6D4` | Routes data by condition (contains, equals, startsWith, regex) |
-| Merge | 🔗 | `#8B5CF6` | Combines up to 3 inputs (concatenate, JSON object, array) |
+| Filter | Funnel | `#06B6D4` | Routes data by condition (contains, equals, startsWith, regex) |
+| Merge | Converging paths | `#8B5CF6` | Combines up to 3 inputs (concatenate, JSON object, array) |
 
 ### API
 | Node | Icon | Color | Description |
 |------|------|-------|-------------|
-| HTTP Request | 🌐 | `#EC4899` | Configurable API calls (GET/POST/PUT/DELETE) |
+| HTTP Request | Globe | `#EC4899` | Configurable API calls (GET/POST/PUT/DELETE) |
 
 ### Logic
 | Node | Icon | Color | Description |
 |------|------|-------|-------------|
-| Conditional | 🔀 | `#F97316` | If/else branching with true/false outputs |
+| Conditional | Forking path | `#F97316` | If/else branching with true/false outputs |
 
 ### Utility
 | Node | Icon | Color | Description |
 |------|------|-------|-------------|
-| Logger | 📋 | `#64748B` | Debug passthrough with log level and tags |
-| Delay | ⏱️ | `#6366F1` | Pauses execution for a set duration |
-| Note | 🗒️ | `#84CC16` | Freeform annotation with live character count |
+| Logger | Terminal prompt | `#64748B` | Debug passthrough with log level and tags |
+| Delay | Clock face | `#6366F1` | Pauses execution for a set duration |
+| Note | Document with fold | `#84CC16` | Freeform annotation with live character count |
 
 ---
 
@@ -239,19 +244,21 @@ Receives `{ id, data, fieldValues, onChange }` — same store contract as built-
 ```
 frontend/src/
 ├── App.js              — Layout: TopBar + Sidebar + Canvas + StatusBar
-├── TopBar.js           — Pipeline name, undo/redo, save/export/clear
+├── TopBar.js           — Pipeline name, canvas node search, undo/redo, save/export/clear
 ├── Sidebar.js          — Searchable categorized node library
 ├── StatusBar.js        — Node/edge counts, shortcuts, Run button
 ├── ui.js               — React Flow canvas, keyboard shortcuts, context menu
-├── store.js            — Zustand store (CRUD, history, persistence, toasts)
+├── store.js            — Zustand store (CRUD, history, persistence, toasts, focusNode)
 ├── constants.js        — Enums: HandleType, FieldType, NodeCategory, etc.
 ├── draggableNode.js    — Drag-and-drop node card for sidebar
 ├── ContextMenu.js      — Right-click menu (delete, duplicate)
+├── DeletableEdge.js    — Custom edge with hover highlight + select-to-delete
 ├── ConfirmModal.js     — Custom confirmation popup
 ├── Toast.js            — Auto-dismissing notifications
 ├── index.css           — Design tokens, globals, React Flow overrides, animations
 └── nodes/
     ├── BaseNode.js     — Rendering engine + createNode() factory
+    ├── NodeIcons.js    — Lucide-style SVG icons for all node types
     └── index.js        — Single-file node registry (11 configs)
 ```
 
