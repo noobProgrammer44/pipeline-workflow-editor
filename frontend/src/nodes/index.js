@@ -102,6 +102,24 @@ const nodeConfigs = [
         id: "response",
       },
     ],
+    fields: [
+      {
+        type: FieldType.SELECT,
+        name: "model",
+        label: "Model",
+        default: "gpt-4",
+        options: [
+          { label: "GPT-4", value: "gpt-4" },
+          { label: "GPT-4 Turbo", value: "gpt-4-turbo" },
+          { label: "GPT-3.5 Turbo", value: "gpt-3.5-turbo" },
+          { label: "Claude 3.5 Sonnet", value: "claude-3.5-sonnet" },
+          { label: "Claude 3 Opus", value: "claude-3-opus" },
+          { label: "Claude 3 Haiku", value: "claude-3-haiku" },
+          { label: "Gemini Pro", value: "gemini-pro" },
+          { label: "Gemini Ultra", value: "gemini-ultra" },
+        ],
+      },
+    ],
   },
 
   {
