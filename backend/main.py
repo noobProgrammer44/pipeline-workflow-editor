@@ -86,21 +86,42 @@ def _dfs_find_cycle(adj: dict[str, list[str]], nodes: set[str]) -> list[str]:
     return []
 
 
+def _prune_to_cycle_nodes(remaining: set[str], edges: list[Edge]) -> set[str]:
+    """Prune nodes that aren't actually in cycles (e.g. downstream of a cycle)."""
+    nodes = set(remaining)
+    changed = True
+    while changed:
+        changed = False
+        in_deg: dict[str, int] = {n: 0 for n in nodes}
+        out_deg: dict[str, int] = {n: 0 for n in nodes}
+        for e in edges:
+            if e.source in nodes and e.target in nodes:
+                out_deg[e.source] += 1
+                in_deg[e.target] += 1
+        to_remove = {n for n in nodes if in_deg[n] == 0 or out_deg[n] == 0}
+        if to_remove:
+            nodes -= to_remove
+            changed = True
+    return nodes
+
+
 def find_cycles(edges: list[Edge], remaining: set[str]) -> CycleInfo:
     """Given the nodes left after Kahn's, find cycle details."""
+    cycle_nodes = _prune_to_cycle_nodes(remaining, edges)
+
     sub_adj: dict[str, list[str]] = defaultdict(list)
     cycle_edges: list[list[str]] = []
 
     for e in edges:
-        if e.source in remaining and e.target in remaining:
+        if e.source in cycle_nodes and e.target in cycle_nodes:
             sub_adj[e.source].append(e.target)
             cycle_edges.append([e.source, e.target])
 
-    cycle_path = _dfs_find_cycle(sub_adj, remaining)
+    cycle_path = _dfs_find_cycle(sub_adj, cycle_nodes)
 
     return CycleInfo(
         cycle_path=cycle_path,
-        cycle_node_ids=list(remaining),
+        cycle_node_ids=list(cycle_nodes),
         cycle_edges=cycle_edges,
     )
 

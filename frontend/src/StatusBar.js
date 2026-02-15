@@ -261,10 +261,7 @@ function ResultModal({ result, error, onClose, onHighlight }) {
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>
                   Cycle Detected
                 </div>
-                <div style={{ fontSize: 12, lineHeight: 1.5 }}>
-                  {result.cycles.cycle_path.join(' \u2192 ')} \u2192 {result.cycles.cycle_path[0]}
-                </div>
-                <div style={{ fontSize: 11, color: '#B45309', marginTop: 6 }}>
+                <div style={{ fontSize: 11, color: '#B45309', marginTop: 2 }}>
                   {result.cycles.cycle_node_ids.length} node{result.cycles.cycle_node_ids.length !== 1 ? 's' : ''} and{' '}
                   {result.cycles.cycle_edges.length} edge{result.cycles.cycle_edges.length !== 1 ? 's' : ''} involved.
                   Remove or redirect an edge to break the loop.
