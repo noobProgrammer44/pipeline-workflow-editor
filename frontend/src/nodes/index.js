@@ -14,6 +14,7 @@
 // └─────────────────────────────────────────────────────────────────────────────┘
 
 import { createNode } from "./BaseNode";
+import { TextNode } from "./TextNode";
 import {
   HandleType,
   HandlePosition,
@@ -117,18 +118,7 @@ const nodeConfigs = [
     icon: TextIcon,
     color: "#F59E0B",
     category: NodeCategory.CORE,
-    handles: [
-      { type: HandleType.SOURCE, position: HandlePosition.RIGHT, id: "output" },
-    ],
-    fields: [
-      {
-        type: FieldType.TEXT,
-        name: "text",
-        label: "Text",
-        default: "{{input}}",
-        placeholder: "Use {{var}} for template variables",
-      },
-    ],
+    component: TextNode,
   },
 
   // ── Data Transformation ───────────────────────────────────────────────────
@@ -415,7 +405,7 @@ const nodeConfigs = [
 // ─── Auto-generated exports (never edit below this line) ──────────────────────
 
 export const nodeTypes = Object.fromEntries(
-  nodeConfigs.map((config) => [config.type, createNode(config)]),
+  nodeConfigs.map((config) => [config.type, config.component || createNode(config)]),
 );
 
 export const nodeList = nodeConfigs.map(({ type, label, icon, category, color }) => ({
