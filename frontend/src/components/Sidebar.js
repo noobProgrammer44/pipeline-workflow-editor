@@ -1,16 +1,11 @@
-// Sidebar.js
-// Searchable, categorized node library with collapsible panel and sections.
-
 import { useState } from 'react';
-import { DraggableNode } from './draggableNode';
-import { nodeList } from './nodes';
-import { NodeCategory } from './constants';
+import { DraggableNode } from './DraggableNode';
+import { nodeList } from '../nodes';
+import { NodeCategory } from '../constants';
 
 const CATEGORIES = Object.values(NodeCategory);
 const SIDEBAR_WIDTH = 220;
 const COLLAPSED_WIDTH = 44;
-
-// ── Styles ───────────────────────────────────────────────────────────────────
 
 const expandedStyle = {
   width: SIDEBAR_WIDTH,
@@ -128,8 +123,6 @@ const emptyStyle = {
   textAlign: 'center',
 };
 
-// ── Collapsed state styles ───────────────────────────────────────────────────
-
 const collapsedInnerStyle = {
   display: 'flex',
   flexDirection: 'column',
@@ -165,8 +158,6 @@ const verticalLabelStyle = {
   pointerEvents: 'none',
 };
 
-// ── SVG Icons ────────────────────────────────────────────────────────────────
-
 const ChevronLeftIcon = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 18l-6-6 6-6" />
@@ -186,8 +177,6 @@ const SearchIcon = (
   </svg>
 );
 
-// ── Component ────────────────────────────────────────────────────────────────
-
 export const Sidebar = () => {
   const [search, setSearch] = useState('');
   const [collapsed, setCollapsed] = useState({});
@@ -206,8 +195,6 @@ export const Sidebar = () => {
     : nodeList;
 
   const isSearching = search.length > 0;
-
-  // ── Collapsed state ────────────────────────────────────────────────────
 
   if (panelCollapsed) {
     return (
@@ -231,8 +218,6 @@ export const Sidebar = () => {
       </div>
     );
   }
-
-  // ── Expanded state ─────────────────────────────────────────────────────
 
   return (
     <div style={expandedStyle}>

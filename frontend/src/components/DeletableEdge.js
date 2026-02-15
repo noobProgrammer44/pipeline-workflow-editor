@@ -1,9 +1,6 @@
-// DeletableEdge.js
-// Custom smoothstep edge: hover highlights, select shows delete button, data-flow label.
-
 import { useState } from 'react';
 import { getSmoothStepPath, BaseEdge, EdgeLabelRenderer } from 'reactflow';
-import { useStore } from './store';
+import { useStore } from '../store';
 
 const INTERACTION_WIDTH = 20;
 

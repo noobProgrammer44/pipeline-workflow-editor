@@ -1,6 +1,3 @@
-// ContextMenu.js
-// Right-click context menu for nodes on the canvas.
-
 import { useEffect, useRef } from 'react';
 
 const menuStyle = {

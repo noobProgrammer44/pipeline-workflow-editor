@@ -1,11 +1,11 @@
-// NodeIcons.js
-// Clean, professional SVG icons for pipeline nodes.
-// Style: Lucide-inspired line art, 16x16, stroke-based, currentColor.
-
-const s = { width: 16, height: 16, display: 'block' };
-const p = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
-
-// ── Core ──────────────────────────────────────────────────────────────────────
+const s = { width: 16, height: 16, display: "block" };
+const p = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+};
 
 // Arrow entering a container
 export const InputIcon = (
@@ -42,8 +42,6 @@ export const TextIcon = (
   </svg>
 );
 
-// ── Transform ─────────────────────────────────────────────────────────────────
-
 // Funnel
 export const FilterIcon = (
   <svg style={s} viewBox="0 0 24 24" {...p}>
@@ -60,8 +58,6 @@ export const MergeIcon = (
   </svg>
 );
 
-// ── API ───────────────────────────────────────────────────────────────────────
-
 // Globe
 export const HTTPIcon = (
   <svg style={s} viewBox="0 0 24 24" {...p}>
@@ -70,8 +66,6 @@ export const HTTPIcon = (
     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z" />
   </svg>
 );
-
-// ── Logic ─────────────────────────────────────────────────────────────────────
 
 // Forking path
 export const ConditionalIcon = (
@@ -82,8 +76,6 @@ export const ConditionalIcon = (
     <path d="M18 9a9 9 0 0 1-9 9" />
   </svg>
 );
-
-// ── Utility ───────────────────────────────────────────────────────────────────
 
 // Terminal prompt
 export const LoggerIcon = (

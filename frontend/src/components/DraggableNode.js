@@ -1,6 +1,4 @@
-// draggableNode.js
-
-import { DRAG_TRANSFER_TYPE } from './constants';
+import { DRAG_TRANSFER_TYPE } from '../constants';
 
 const cardStyle = {
   cursor: 'grab',

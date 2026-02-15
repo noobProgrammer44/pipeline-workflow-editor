@@ -1,30 +1,7 @@
-// StatusBar.js
-
 import { useState } from 'react';
-import { useStore } from './store';
+import { useStore } from '../store';
 import { shallow } from 'zustand/shallow';
-
-// ── API ─────────────────────────────────────────────────────────────────────
-
-const API_URL = 'http://localhost:8000/pipelines/parse';
-
-async function parsePipeline(nodes, edges) {
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      nodes: nodes.map((n) => ({ id: n.id, type: n.type, data: n.data })),
-      edges: edges.map((e) => ({ source: e.source, target: e.target, id: e.id })),
-    }),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(text || `Server error (${res.status})`);
-  }
-  return res.json();
-}
-
-// ── Styles ──────────────────────────────────────────────────────────────────
+import { parsePipeline } from '../api/pipeline';
 
 const barStyle = {
   display: 'flex',
@@ -99,7 +76,6 @@ const clearHighlightBtnStyle = {
   gap: 4,
 };
 
-// Modal styles
 const overlayStyle = {
   position: 'fixed',
   inset: 0,
@@ -199,8 +175,6 @@ const highlightBtnStyle = {
   gap: 6,
 };
 
-// ── Icons ───────────────────────────────────────────────────────────────────
-
 const AnalysisIcon = (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -222,8 +196,6 @@ const HighlightIcon = (
     <line x1="12" y1="16" x2="12.01" y2="16" />
   </svg>
 );
-
-// ── Result Modal ────────────────────────────────────────────────────────────
 
 function ResultModal({ result, error, onClose, onHighlight }) {
   return (
@@ -303,8 +275,6 @@ function ResultModal({ result, error, onClose, onHighlight }) {
     </div>
   );
 }
-
-// ── StatusBar ───────────────────────────────────────────────────────────────
 
 export const StatusBar = () => {
   const {

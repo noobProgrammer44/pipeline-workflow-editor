@@ -1,12 +1,9 @@
-// ui.js
-// Pipeline canvas — React Flow editor surface with keyboard shortcuts and context menu.
-
 import { useState, useRef, useCallback, useEffect } from "react";
 import ReactFlow, { Controls, Background, MiniMap } from "reactflow";
-import { useStore } from "./store";
+import { useStore } from "../store";
 import { shallow } from "zustand/shallow";
-import { nodeTypes, nodeList } from "./nodes";
-import { EdgeType, DRAG_TRANSFER_TYPE } from "./constants";
+import { nodeTypes, nodeList } from "../nodes";
+import { EdgeType, DRAG_TRANSFER_TYPE } from "../constants";
 import { ContextMenu } from "./ContextMenu";
 import { DeletableEdge } from "./DeletableEdge";
 
@@ -63,8 +60,7 @@ export const PipelineUI = () => {
     closeContextMenu,
   } = useStore(selector, shallow);
 
-  // ── Wrapped handlers (push history before removals / connections) ──────
-
+  // Push history before removals so undo works correctly
   const wrappedOnNodesChange = useCallback(
     (changes) => {
       const hasRemoval = changes.some((c) => c.type === "remove");
@@ -91,21 +87,17 @@ export const PipelineUI = () => {
     [onConnect, pushHistory],
   );
 
-  // ── Keyboard shortcuts ────────────────────────────────────────────────
-
   useEffect(() => {
     const handleKeyDown = (e) => {
       const tag = document.activeElement?.tagName;
       const isEditing = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 
-      // Ctrl+Z: Undo
       if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
         e.preventDefault();
         undo();
         return;
       }
 
-      // Ctrl+Shift+Z or Ctrl+Y: Redo
       if (
         ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Z") ||
         ((e.ctrlKey || e.metaKey) && e.key === "y")
@@ -115,27 +107,22 @@ export const PipelineUI = () => {
         return;
       }
 
-      // Ctrl+D: Duplicate selected
       if ((e.ctrlKey || e.metaKey) && e.key === "d") {
         e.preventDefault();
         duplicateSelectedNodes();
         return;
       }
 
-      // Escape: close context menu
       if (e.key === "Escape") {
         closeContextMenu();
       }
 
-      // Don't handle Delete/Backspace when editing text fields
       if (isEditing) return;
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [undo, redo, duplicateSelectedNodes, closeContextMenu]);
-
-  // ── Context menu ──────────────────────────────────────────────────────
 
   const onNodeContextMenu = useCallback((event, node) => {
     event.preventDefault();
@@ -145,8 +132,6 @@ export const PipelineUI = () => {
   const onPaneClick = useCallback(() => {
     closeContextMenu();
   }, [closeContextMenu]);
-
-  // ── Drop handler ──────────────────────────────────────────────────────
 
   const getInitNodeData = (nodeID, type) => {
     return { id: nodeID, nodeType: `${type}` };
@@ -191,8 +176,6 @@ export const PipelineUI = () => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
-
-  // ── Render ────────────────────────────────────────────────────────────
 
   return (
     <div

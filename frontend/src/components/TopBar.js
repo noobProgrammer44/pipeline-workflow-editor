@@ -1,20 +1,14 @@
-// TopBar.js
-
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { useStore } from './store';
+import { useStore } from '../store';
 import { shallow } from 'zustand/shallow';
 import { ConfirmModal } from './ConfirmModal';
-import { nodeList } from './nodes';
-
-// ── Build type → { label, icon } lookup ──────────────────────────────────────
+import { nodeList } from '../nodes';
 
 const nodeLabelMap = Object.fromEntries(
   nodeList.map((n) => [n.type, { label: n.label, icon: n.icon }]),
 );
 
 const MAX_RESULTS = 8;
-
-// ── Styles ───────────────────────────────────────────────────────────────────
 
 const barStyle = {
   display: 'flex',
@@ -203,16 +197,12 @@ const kbdStyle = {
   fontFamily: 'inherit',
 };
 
-// ── Search icon SVG ──────────────────────────────────────────────────────────
-
 const SearchIcon = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8" />
     <line x1="21" y1="21" x2="16.65" y2="16.65" />
   </svg>
 );
-
-// ── Component ────────────────────────────────────────────────────────────────
 
 export const TopBar = () => {
   const {
@@ -257,8 +247,6 @@ export const TopBar = () => {
     }
   }, [editing]);
 
-  // ── Search filtering ─────────────────────────────────────────────────────
-
   const results = useMemo(() => {
     if (!search.trim()) return [];
     const q = search.toLowerCase();
@@ -268,7 +256,6 @@ export const TopBar = () => {
         const label = meta ? meta.label.toLowerCase() : '';
         const id = node.id.toLowerCase();
         if (label.includes(q) || id.includes(q)) return true;
-        // Check string values in node.data
         if (node.data) {
           for (const val of Object.values(node.data)) {
             if (typeof val === 'string' && val.toLowerCase().includes(q)) return true;
@@ -281,12 +268,9 @@ export const TopBar = () => {
 
   const showDropdown = searchFocused && search.trim().length > 0;
 
-  // Reset active index when results change
   useEffect(() => {
     setActiveIndex(0);
   }, [results.length, search]);
-
-  // ── Navigate to node ─────────────────────────────────────────────────────
 
   const selectResult = (nodeId) => {
     focusNode(nodeId);
@@ -294,8 +278,6 @@ export const TopBar = () => {
     setSearchFocused(false);
     searchRef.current?.blur();
   };
-
-  // ── Keyboard navigation ──────────────────────────────────────────────────
 
   const onSearchKeyDown = (e) => {
     if (!showDropdown) return;
@@ -316,8 +298,6 @@ export const TopBar = () => {
       searchRef.current?.blur();
     }
   };
-
-  // ── Close dropdown on outside click ──────────────────────────────────────
 
   useEffect(() => {
     if (!showDropdown) return;
@@ -349,7 +329,6 @@ export const TopBar = () => {
         />
       </div>
 
-      {/* ── Center: Search ────────────────────────────────────────────── */}
       <div style={centerStyle}>
         <div style={searchWrapperStyle}>
           <span style={searchIconStyle}>{SearchIcon}</span>

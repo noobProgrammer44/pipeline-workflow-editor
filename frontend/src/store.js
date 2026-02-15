@@ -1,5 +1,3 @@
-// store.js
-
 import { create } from "zustand";
 import {
   addEdge,
@@ -7,7 +5,6 @@ import {
   applyEdgeChanges,
   MarkerType,
 } from "reactflow";
-
 
 const MAX_HISTORY = 50;
 const TOAST_DURATION_MS = 2500;
@@ -22,18 +19,12 @@ const EDGE_MARKER = {
 };
 
 export const useStore = create((set, get) => ({
-  // ── Core state ──────────────────────────────────────────────────────────
-
   nodes: [],
   edges: [],
   nodeIDs: {},
 
-  // ── Pipeline metadata ───────────────────────────────────────────────────
-
   pipelineName: "Untitled Pipeline",
   setPipelineName: (name) => set({ pipelineName: name }),
-
-  // ── History (undo / redo) ───────────────────────────────────────────────
 
   history: [],
   future: [],
@@ -76,8 +67,6 @@ export const useStore = create((set, get) => ({
     get().addToast("Redo", "info");
   },
 
-  // ── Toast notifications ─────────────────────────────────────────────────
-
   toasts: [],
 
   addToast: (message, type = "info") => {
@@ -92,16 +81,12 @@ export const useStore = create((set, get) => ({
     }, TOAST_DURATION_MS);
   },
 
-  // ── Node ID generation ──────────────────────────────────────────────────
-
   getNodeID: (type) => {
     const prevIDs = get().nodeIDs;
     const next = (prevIDs[type] ?? 0) + 1;
     set({ nodeIDs: { ...prevIDs, [type]: next } });
     return `${type}-${next}`;
   },
-
-  // ── Node CRUD ───────────────────────────────────────────────────────────
 
   addNode: (node) => {
     set((state) => ({
@@ -185,8 +170,6 @@ export const useStore = create((set, get) => ({
     get().addToast("Node duplicated", "success");
   },
 
-  // ── React Flow handlers ─────────────────────────────────────────────────
-
   onNodesChange: (changes) => {
     if (
       get().cycleHighlight &&
@@ -213,7 +196,6 @@ export const useStore = create((set, get) => ({
 
   onConnect: (connection) => {
     if (get().cycleHighlight) get().clearCycleHighlights();
-    // Extract handle name from sourceHandle (format: "nodeId-handleName")
     const label = connection.sourceHandle
       ? connection.sourceHandle.replace(connection.source + "-", "")
       : "";
@@ -231,8 +213,6 @@ export const useStore = create((set, get) => ({
       ),
     }));
   },
-
-  // ── Field updates ───────────────────────────────────────────────────────
 
   updateNodeField: (nodeId, fieldName, fieldValue) => {
     set((state) => ({
@@ -255,8 +235,6 @@ export const useStore = create((set, get) => ({
       }),
     }));
   },
-
-  // ── React Flow instance ────────────────────────────────────────────────
 
   reactFlowInstance: null,
   setReactFlowInstance: (instance) => set({ reactFlowInstance: instance }),
@@ -283,8 +261,6 @@ export const useStore = create((set, get) => ({
       { padding: 0.5, duration: 400 },
     );
   },
-
-  // ── Cycle highlighting ────────────────────────────────────────────────
 
   cycleHighlight: null,
 
@@ -359,13 +335,9 @@ export const useStore = create((set, get) => ({
     }));
   },
 
-  // ── Context menu ───────────────────────────────────────────────────────
-
   contextMenu: null,
   openContextMenu: (x, y, nodeId) => set({ contextMenu: { x, y, nodeId } }),
   closeContextMenu: () => set({ contextMenu: null }),
-
-  // ── Canvas ──────────────────────────────────────────────────────────────
 
   clearCanvas: () => {
     const { nodes, edges } = get();
@@ -373,8 +345,6 @@ export const useStore = create((set, get) => ({
     set({ nodes: [], edges: [], nodeIDs: {}, history: [], future: [], cycleHighlight: null });
     get().addToast("Canvas cleared", "info");
   },
-
-  // ── Persistence ─────────────────────────────────────────────────────────
 
   savePipeline: () => {
     const { nodes, edges, nodeIDs, pipelineName } = get();

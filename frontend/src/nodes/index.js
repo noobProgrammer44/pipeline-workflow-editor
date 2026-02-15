@@ -1,20 +1,42 @@
-// nodes/index.js
-// ═══════════════════════════════════════════════════════════════════════════════
-// Single-file node registry. Every node in the pipeline editor is defined here.
+// Node Registry
 //
-// ┌─────────────────────────────────────────────────────────────────────────────┐
-// │  HOW TO ADD A NEW NODE:                                                    │
-// │                                                                            │
-// │  1. Add a config object to the `nodeConfigs` array below.                  │
-// │  2. That's it. The toolbar, canvas, and drag-and-drop all pick it up.      │
-// │                                                                            │
-// │  Required keys:  type, label, category                                     │
-// │  Optional keys:  icon, color, description, width, height, handles, fields  │
-// │                  body (render prop for custom content — escape hatch)       │
-// └─────────────────────────────────────────────────────────────────────────────┘
+// This is where all nodes live. The whole abstraction works like this:
+// - You write a config object below (type, label, icon, handles, fields)
+// - createNode() wraps it in BaseNode which handles all the rendering
+// - NodeShell gives it the visual chrome (header, buttons, etc)
+// - Everything gets auto-exported to nodeTypes and nodeList
+//
+// To add a node, just add an object to nodeConfigs:
+//
+//   {
+//     type: "myNode",
+//     label: "My Node",
+//     icon: MyIcon,
+//     color: "#FF5733",
+//     category: NodeCategory.CORE,
+//     handles: [
+//       { type: HandleType.TARGET, position: HandlePosition.LEFT, id: "input" },
+//       { type: HandleType.SOURCE, position: HandlePosition.RIGHT, id: "output" },
+//     ],
+//     fields: [
+//       { type: FieldType.TEXT, name: "url", label: "URL", default: "" },
+//       { type: FieldType.SELECT, name: "method", label: "Method",
+//         default: "GET", options: ["GET", "POST"] },
+//     ],
+//   }
+//
+// Field types: TEXT, SELECT, TEXTAREA, NUMBER, CHECKBOX
+// For SELECT, options can be strings or {label, value} objects
+//
+// If you need custom behavior (like TextNode with its {{variable}} handles),
+// pass a component instead:
+//   { type: "text", label: "Text", component: TextNode }
+//
+// For custom UI inside a standard node, use the body slot:
+//   { type: "note", body: ({ fieldValues, onChange }) => <YourJSX /> }
 
-import { createNode } from "./BaseNode";
-import { TextNode } from "./TextNode";
+import { createNode } from "./helpers/BaseNode";
+import { TextNode } from "./helpers/TextNode";
 import {
   HandleType,
   HandlePosition,
@@ -33,12 +55,10 @@ import {
   LoggerIcon,
   DelayIcon,
   NoteIcon,
-} from "./NodeIcons";
-
-// ─── Node Definitions ─────────────────────────────────────────────────────────
+} from "./helpers/NodeIcons";
 
 const nodeConfigs = [
-  // ── Core Nodes ────────────────────────────────────────────────────────────
+  // Core Nodes
 
   {
     type: "customInput",
@@ -65,8 +85,6 @@ const nodeConfigs = [
       },
     ],
   },
-
-
 
   {
     type: "llm",
@@ -121,7 +139,7 @@ const nodeConfigs = [
     component: TextNode,
   },
 
-  // ── Data Transformation ───────────────────────────────────────────────────
+  // Data Transformation
 
   {
     type: "filter",
@@ -197,7 +215,7 @@ const nodeConfigs = [
     ],
   },
 
-  // ── API ───────────────────────────────────────────────────────────────────
+  // API
 
   {
     type: "httpRequest",
@@ -242,7 +260,7 @@ const nodeConfigs = [
     ],
   },
 
-  // ── Logic ─────────────────────────────────────────────────────────────────
+  // Logic
 
   {
     type: "conditional",
@@ -279,7 +297,7 @@ const nodeConfigs = [
     ],
   },
 
-  // ── Utility ───────────────────────────────────────────────────────────────
+  // Utility
 
   {
     type: "logger",
@@ -402,10 +420,12 @@ const nodeConfigs = [
   },
 ];
 
-// ─── Auto-generated exports (never edit below this line) ──────────────────────
-
+// Auto-exports for React Flow (nodeTypes) and sidebar (nodeList)
 export const nodeTypes = Object.fromEntries(
-  nodeConfigs.map((config) => [config.type, config.component || createNode(config)]),
+  nodeConfigs.map((config) => [
+    config.type,
+    config.component || createNode(config),
+  ]),
 );
 
 export const nodeList = nodeConfigs.map(({ type, label, icon, category, color }) => ({
@@ -416,7 +436,4 @@ export const nodeList = nodeConfigs.map(({ type, label, icon, category, color })
   color,
 }));
 
-export const NODE_CATEGORIES = [
-  "All",
-  ...Object.values(NodeCategory),
-];
+export const NODE_CATEGORIES = ["All", ...Object.values(NodeCategory)];

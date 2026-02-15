@@ -1,6 +1,4 @@
-// Toast.js
-
-import { useStore } from './store';
+import { useStore } from '../store';
 
 const containerStyle = {
   position: 'fixed',

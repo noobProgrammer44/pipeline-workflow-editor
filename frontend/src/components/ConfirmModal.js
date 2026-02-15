@@ -1,5 +1,3 @@
-// ConfirmModal.js
-
 import { useEffect } from 'react';
 
 const overlayStyle = {
