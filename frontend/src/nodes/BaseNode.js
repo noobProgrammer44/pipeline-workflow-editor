@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import { Handle, Position } from 'reactflow';
 import { useStore } from '../store';
 import { HandleType, HandlePosition, FieldType } from '../constants';
+import { NodeShell, HANDLE_BASE } from './NodeShell';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -110,41 +111,11 @@ const CHECKBOX_STYLE = {
   cursor: 'pointer',
 };
 
-const HEADER_BTN_STYLE = {
-  background: 'rgba(0,0,0,0.15)',
-  border: 'none',
-  color: '#fff',
-  cursor: 'pointer',
-  padding: 0,
-  fontSize: 11,
-  lineHeight: 1,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: 4,
-  width: 18,
-  height: 18,
-  flexShrink: 0,
-  transition: 'background 0.1s ease',
-};
-
-const DELETE_BTN_STYLE = {
-  ...HEADER_BTN_STYLE,
-  marginLeft: 'auto',
-};
-
-// ─── SVG Icons ───────────────────────────────────────────────────────────────
+// ─── Chevron SVG ─────────────────────────────────────────────────────────────
 
 const ChevronDown = (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M6 9l6 6 6-6" />
-  </svg>
-);
-
-const SettingsIcon = (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
   </svg>
 );
 
@@ -386,11 +357,8 @@ function computeHandleStyles(handles, offsets, color) {
     if (h.position === HandlePosition.BOTTOM) edgeOffset.bottom = -6;
 
     return {
-      width: 12,
-      height: 12,
+      ...HANDLE_BASE,
       background: h.type === HandleType.SOURCE ? color : '#CBD5E1',
-      border: '2.5px solid #fff',
-      boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
       ...edgeOffset,
       ...(offsets[i] != null ? { top: offsets[i] } : undefined),
       ...h.style,
@@ -415,8 +383,6 @@ export function BaseNode({ id, data, config }) {
 
   const updateNodeField = useStore((state) => state.updateNodeField);
   const updateNodeFields = useStore((state) => state.updateNodeFields);
-  const deleteNode = useStore((state) => state.deleteNode);
-  const openContextMenu = useStore((state) => state.openContextMenu);
 
   const buildInitialValues = () => {
     const vals = {};
@@ -446,37 +412,6 @@ export function BaseNode({ id, data, config }) {
 
   // ── Memoized styles ────────────────────────────────────────────────────
 
-  const { containerStyle, headerStyle, bodyStyle } = useMemo(() => ({
-    containerStyle: {
-      width,
-      minHeight: height === 'auto' ? 60 : height,
-      background: '#FFFFFF',
-      borderRadius: 10,
-      border: '1px solid #E2E8F0',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
-      fontFamily: 'inherit',
-      overflow: 'visible',
-      transition: 'box-shadow 0.2s ease',
-    },
-    headerStyle: {
-      background: color,
-      color: '#FFFFFF',
-      padding: '8px 12px',
-      borderRadius: '10px 10px 0 0',
-      fontSize: 13,
-      fontWeight: 600,
-      display: 'flex',
-      alignItems: 'center',
-      gap: 6,
-      letterSpacing: '0.01em',
-      position: 'relative',
-    },
-    bodyStyle: {
-      padding: (fields.length > 0 || BodySlot) ? '10px 12px' : '8px 12px',
-      overflow: 'hidden',
-    },
-  }), [color, width, height, fields.length, BodySlot]);
-
   const descriptionStyle = useMemo(() => ({
     fontSize: 11,
     color: '#94A3B8',
@@ -492,79 +427,45 @@ export function BaseNode({ id, data, config }) {
 
   // ── Render ─────────────────────────────────────────────────────────────
 
+  const handleElements = handles.map((h, i) => (
+    <Handle
+      key={`${h.type}-${h.id}`}
+      type={h.type}
+      position={positionMap[h.position] || Position.Left}
+      id={`${id}-${h.id}`}
+      style={handleStyles[i]}
+    />
+  ));
+
   return (
-    <div style={containerStyle}>
-      {handles.map((h, i) => (
-        <Handle
-          key={`${h.type}-${h.id}`}
-          type={h.type}
-          position={positionMap[h.position] || Position.Left}
-          id={`${id}-${h.id}`}
-          style={handleStyles[i]}
+    <NodeShell
+      id={id}
+      icon={icon}
+      label={label}
+      color={color}
+      width={width}
+      minHeight={height === 'auto' ? 60 : height}
+      bodyPadding={(fields.length > 0 || BodySlot) ? '10px 12px' : '8px 12px'}
+      handles={handleElements}
+    >
+      {description && <div style={descriptionStyle}>{description}</div>}
+      {fields.map((f) => (
+        <NodeField
+          key={f.name}
+          field={f}
+          value={fieldValues[f.name]}
+          onChange={(val) => handleFieldChange(f.name, val)}
         />
       ))}
-
-      <div style={headerStyle}>
-        {icon && <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{icon}</span>}
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {label}
-        </span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            const rect = e.currentTarget.getBoundingClientRect();
-            openContextMenu(rect.left, rect.bottom + 4, id);
-          }}
-          style={DELETE_BTN_STYLE}
-          title="Node settings"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(0,0,0,0.3)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(0,0,0,0.15)';
-          }}
-        >
-          {SettingsIcon}
-        </button>
-        <button
-          className="node-delete-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            deleteNode(id);
-          }}
-          style={HEADER_BTN_STYLE}
-          title="Delete node"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(0,0,0,0.3)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(0,0,0,0.15)';
-          }}
-        >
-          ✕
-        </button>
-      </div>
-
-      <div style={bodyStyle}>
-        {description && <div style={descriptionStyle}>{description}</div>}
-        {fields.map((f) => (
-          <NodeField
-            key={f.name}
-            field={f}
-            value={fieldValues[f.name]}
-            onChange={(val) => handleFieldChange(f.name, val)}
-          />
-        ))}
-        {BodySlot && (
-          <BodySlot
-            id={id}
-            data={data}
-            fieldValues={fieldValues}
-            onChange={handleFieldChange}
-          />
-        )}
-      </div>
-    </div>
+      {BodySlot && (
+        <BodySlot
+          id={id}
+          data={data}
+          fieldValues={fieldValues}
+          onChange={handleFieldChange}
+        />
+      )}
+    </NodeShell>
   );
 }
 

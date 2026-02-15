@@ -48,7 +48,9 @@ export function DeletableEdge({
   });
 
   const deleteEdge = useStore((s) => s.deleteEdge);
-  const edgeStyle = hovered && !selected ? { ...style, ...hoverStyle } : style;
+  const isCycleEdge = style?.stroke === '#ef4444';
+  const activeHoverStyle = isCycleEdge ? { stroke: '#ef4444', strokeWidth: 3 } : hoverStyle;
+  const edgeStyle = hovered && !selected ? { ...style, ...activeHoverStyle } : style;
 
   return (
     <>

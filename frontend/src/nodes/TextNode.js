@@ -6,6 +6,7 @@ import { useState, useEffect, useMemo, useRef, memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import { useStore } from '../store';
 import { TextIcon } from './NodeIcons';
+import { NodeShell, HANDLE_BASE } from './NodeShell';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -18,52 +19,7 @@ const VAR_ROW_H = 26;
 const CHAR_W = 7.2;
 const NODE_COLOR = '#F59E0B';
 
-// ─── Styles ─────────────────────────────────────────────────────────────────
-
-const containerBase = {
-  background: '#FFFFFF',
-  borderRadius: 10,
-  border: '1px solid #E2E8F0',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
-  fontFamily: 'inherit',
-  overflow: 'visible',
-  transition: 'box-shadow 0.2s ease',
-};
-
-const headerStyle = {
-  background: NODE_COLOR,
-  color: '#FFFFFF',
-  padding: '8px 12px',
-  borderRadius: '10px 10px 0 0',
-  fontSize: 13,
-  fontWeight: 600,
-  display: 'flex',
-  alignItems: 'center',
-  gap: 6,
-  letterSpacing: '0.01em',
-};
-
-const btnStyle = {
-  background: 'rgba(0,0,0,0.15)',
-  border: 'none',
-  color: '#fff',
-  cursor: 'pointer',
-  padding: 0,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  borderRadius: 4,
-  width: 18,
-  height: 18,
-  flexShrink: 0,
-  transition: 'background 0.1s ease',
-  fontSize: 11,
-  lineHeight: 1,
-};
-
-const bodyStyle = {
-  padding: '10px 12px',
-};
+// ─── Styles (TextNode-specific only) ────────────────────────────────────────
 
 const varRowStyle = {
   display: 'flex',
@@ -100,25 +56,9 @@ const textareaBase = {
   minHeight: 36,
 };
 
-const handleBase = {
-  width: 12,
-  height: 12,
-  border: '2.5px solid #fff',
-  boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
-};
-
-// ─── SVG Icons ──────────────────────────────────────────────────────────────
-
-const SettingsIcon = (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-  </svg>
-);
-
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function parseVariables(text) {
+export function parseVariables(text) {
   const vars = [];
   const seen = new Set();
   let match;
@@ -139,8 +79,6 @@ function TextNodeInner({ id, data }) {
   const [text, setText] = useState(data?.text ?? '{{input}}');
 
   const updateNodeField = useStore((s) => s.updateNodeField);
-  const deleteNode = useStore((s) => s.deleteNode);
-  const openContextMenu = useStore((s) => s.openContextMenu);
 
   // Sync initial text to store
   useEffect(() => {
@@ -194,22 +132,16 @@ function TextNodeInner({ id, data }) {
     updateNodeField(id, 'text', e.target.value);
   };
 
-  const hoverIn = (e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.3)'; };
-  const hoverOut = (e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.15)'; };
-
   // ── Render ───────────────────────────────────────────────────────────────
 
-  return (
-    <div style={{ ...containerBase, width: nodeWidth, minHeight: 60 }}>
-      {/* ── Output handle (right, centered) ────────────────────────── */}
+  const handleElements = (
+    <>
       <Handle
         type="source"
         position={Position.Right}
         id={`${id}-output`}
-        style={{ ...handleBase, background: NODE_COLOR, right: -6 }}
+        style={{ ...HANDLE_BASE, background: NODE_COLOR, right: -6 }}
       />
-
-      {/* ── Variable handles (left, aligned with label rows) ─────── */}
       {variables.map((v, i) => (
         <Handle
           key={v}
@@ -217,70 +149,45 @@ function TextNodeInner({ id, data }) {
           position={Position.Left}
           id={`${id}-${v}`}
           style={{
-            ...handleBase,
+            ...HANDLE_BASE,
             background: '#CBD5E1',
             left: -6,
             top: HEADER_H + BODY_PAD + i * VAR_ROW_H + VAR_ROW_H / 2,
           }}
         />
       ))}
+    </>
+  );
 
-      {/* ── Header ─────────────────────────────────────────────────── */}
-      <div style={headerStyle}>
-        <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{TextIcon}</span>
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          Text
-        </span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            const rect = e.currentTarget.getBoundingClientRect();
-            openContextMenu(rect.left, rect.bottom + 4, id);
-          }}
-          style={{ ...btnStyle, marginLeft: 'auto' }}
-          title="Node settings"
-          onMouseEnter={hoverIn}
-          onMouseLeave={hoverOut}
-        >
-          {SettingsIcon}
-        </button>
-        <button
-          className="node-delete-btn"
-          onClick={(e) => { e.stopPropagation(); deleteNode(id); }}
-          style={btnStyle}
-          title="Delete node"
-          onMouseEnter={hoverIn}
-          onMouseLeave={hoverOut}
-        >
-          ✕
-        </button>
-      </div>
+  return (
+    <NodeShell
+      id={id}
+      icon={TextIcon}
+      label="Text"
+      color={NODE_COLOR}
+      width={nodeWidth}
+      handles={handleElements}
+    >
+      {variables.map((v) => (
+        <div key={v} style={varRowStyle}>
+          <span style={varBadgeStyle}>{v}</span>
+        </div>
+      ))}
 
-      {/* ── Body ───────────────────────────────────────────────────── */}
-      <div style={bodyStyle}>
-        {/* Variable label rows — aligned with left-side handles */}
-        {variables.map((v) => (
-          <div key={v} style={varRowStyle}>
-            <span style={varBadgeStyle}>{v}</span>
-          </div>
-        ))}
-
-        {/* Textarea with auto-resize */}
-        <textarea
-          ref={textareaRef}
-          className="nodrag nowheel"
-          value={text}
-          onChange={handleChange}
-          placeholder={'Type text with {{ variables }}...'}
-          style={{
-            ...textareaBase,
-            marginTop: variables.length > 0 ? 6 : 0,
-          }}
-          onFocus={(e) => { e.target.style.borderColor = NODE_COLOR; }}
-          onBlur={(e) => { e.target.style.borderColor = '#E2E8F0'; }}
-        />
-      </div>
-    </div>
+      <textarea
+        ref={textareaRef}
+        className="nodrag nowheel"
+        value={text}
+        onChange={handleChange}
+        placeholder={'Type text with {{ variables }}...'}
+        style={{
+          ...textareaBase,
+          marginTop: variables.length > 0 ? 6 : 0,
+        }}
+        onFocus={(e) => { e.target.style.borderColor = NODE_COLOR; }}
+        onBlur={(e) => { e.target.style.borderColor = '#E2E8F0'; }}
+      />
+    </NodeShell>
   );
 }
 

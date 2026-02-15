@@ -110,6 +110,7 @@ export const useStore = create((set, get) => ({
   },
 
   deleteNode: (nodeId) => {
+    if (get().cycleHighlight) get().clearCycleHighlights();
     get().pushHistory();
     set((state) => ({
       nodes: state.nodes.filter((n) => n.id !== nodeId),
@@ -138,6 +139,7 @@ export const useStore = create((set, get) => ({
   },
 
   deleteEdge: (edgeId) => {
+    if (get().cycleHighlight) get().clearCycleHighlights();
     get().pushHistory();
     set((state) => ({
       edges: state.edges.filter((e) => e.id !== edgeId),
@@ -186,18 +188,31 @@ export const useStore = create((set, get) => ({
   // ── React Flow handlers ─────────────────────────────────────────────────
 
   onNodesChange: (changes) => {
+    if (
+      get().cycleHighlight &&
+      changes.some((c) => c.type === "remove" || c.type === "add")
+    ) {
+      get().clearCycleHighlights();
+    }
     set((state) => ({
       nodes: applyNodeChanges(changes, state.nodes),
     }));
   },
 
   onEdgesChange: (changes) => {
+    if (
+      get().cycleHighlight &&
+      changes.some((c) => c.type === "remove" || c.type === "add")
+    ) {
+      get().clearCycleHighlights();
+    }
     set((state) => ({
       edges: applyEdgeChanges(changes, state.edges),
     }));
   },
 
   onConnect: (connection) => {
+    if (get().cycleHighlight) get().clearCycleHighlights();
     // Extract handle name from sourceHandle (format: "nodeId-handleName")
     const label = connection.sourceHandle
       ? connection.sourceHandle.replace(connection.source + "-", "")
@@ -269,6 +284,81 @@ export const useStore = create((set, get) => ({
     );
   },
 
+  // ── Cycle highlighting ────────────────────────────────────────────────
+
+  cycleHighlight: null,
+
+  highlightCycles: (cycleInfo) => {
+    const nodeIdSet = new Set(cycleInfo.cycle_node_ids);
+    const edgeKeySet = new Set(
+      cycleInfo.cycle_edges.map(([s, t]) => `${s}->${t}`),
+    );
+
+    set((state) => ({
+      cycleHighlight: { nodeIds: nodeIdSet, edgeKeys: edgeKeySet },
+      nodes: state.nodes.map((n) =>
+        nodeIdSet.has(n.id) ? { ...n, className: "cycle-node" } : n,
+      ),
+      edges: state.edges.map((e) => {
+        if (edgeKeySet.has(`${e.source}->${e.target}`)) {
+          return {
+            ...e,
+            style: { stroke: "#ef4444", strokeWidth: 3 },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: "#ef4444",
+              width: 16,
+              height: 16,
+            },
+          };
+        }
+        return e;
+      }),
+    }));
+
+    // Pan/zoom to fit all affected nodes
+    const { nodes, reactFlowInstance } = get();
+    if (reactFlowInstance && nodeIdSet.size > 0) {
+      const affected = nodes.filter((n) => nodeIdSet.has(n.id));
+      if (affected.length > 0) {
+        const xs = affected.map((n) => n.position.x);
+        const ys = affected.map((n) => n.position.y);
+        const maxX = Math.max(
+          ...affected.map((n) => n.position.x + (n.width || 220)),
+        );
+        const maxY = Math.max(
+          ...affected.map((n) => n.position.y + (n.height || 120)),
+        );
+        reactFlowInstance.fitBounds(
+          {
+            x: Math.min(...xs),
+            y: Math.min(...ys),
+            width: maxX - Math.min(...xs),
+            height: maxY - Math.min(...ys),
+          },
+          { padding: 0.3, duration: 500 },
+        );
+      }
+    }
+  },
+
+  clearCycleHighlights: () => {
+    const current = get().cycleHighlight;
+    if (!current) return;
+    set((state) => ({
+      cycleHighlight: null,
+      nodes: state.nodes.map((n) =>
+        n.className === "cycle-node" ? { ...n, className: undefined } : n,
+      ),
+      edges: state.edges.map((e) => {
+        if (current.edgeKeys.has(`${e.source}->${e.target}`)) {
+          return { ...e, style: EDGE_STYLE, markerEnd: EDGE_MARKER };
+        }
+        return e;
+      }),
+    }));
+  },
+
   // ── Context menu ───────────────────────────────────────────────────────
 
   contextMenu: null,
@@ -280,7 +370,7 @@ export const useStore = create((set, get) => ({
   clearCanvas: () => {
     const { nodes, edges } = get();
     if (nodes.length === 0 && edges.length === 0) return;
-    set({ nodes: [], edges: [], nodeIDs: {}, history: [], future: [] });
+    set({ nodes: [], edges: [], nodeIDs: {}, history: [], future: [], cycleHighlight: null });
     get().addToast("Canvas cleared", "info");
   },
 

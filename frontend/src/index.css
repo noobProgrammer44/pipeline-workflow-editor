@@ -280,3 +280,30 @@ code {
   background: rgba(124, 58, 237, 0.06) !important;
   border: 1px solid rgba(124, 58, 237, 0.3) !important;
 }
+
+/* ─── Cycle Highlighting ─────────────────────────────────────────────────── */
+
+@keyframes cycleNodePulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px var(--error),
+      0 0 8px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px var(--error),
+      0 0 16px rgba(239, 68, 68, 0.5);
+  }
+}
+
+.react-flow__node.cycle-node > div {
+  animation: cycleNodePulse 1.5s ease-in-out infinite !important;
+  border-color: var(--error) !important;
+}
+
+.react-flow__node.cycle-node:hover > div {
+  box-shadow:
+    0 0 0 2.5px var(--error),
+    0 0 16px rgba(239, 68, 68, 0.4) !important;
+}
