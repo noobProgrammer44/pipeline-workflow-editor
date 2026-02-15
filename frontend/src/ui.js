@@ -35,12 +35,14 @@ const selector = (state) => ({
   deleteSelectedNodes: state.deleteSelectedNodes,
   duplicateSelectedNodes: state.duplicateSelectedNodes,
   setReactFlowInstance: state.setReactFlowInstance,
+  contextMenu: state.contextMenu,
+  openContextMenu: state.openContextMenu,
+  closeContextMenu: state.closeContextMenu,
 });
 
 export const PipelineUI = () => {
   const reactFlowWrapper = useRef(null);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
-  const [contextMenu, setContextMenu] = useState(null);
 
   const {
     nodes,
@@ -56,6 +58,9 @@ export const PipelineUI = () => {
     deleteNode,
     duplicateSelectedNodes,
     setReactFlowInstance: storeSetInstance,
+    contextMenu,
+    openContextMenu,
+    closeContextMenu,
   } = useStore(selector, shallow);
 
   // ── Wrapped handlers (push history before removals / connections) ──────
@@ -119,7 +124,7 @@ export const PipelineUI = () => {
 
       // Escape: close context menu
       if (e.key === "Escape") {
-        setContextMenu(null);
+        closeContextMenu();
       }
 
       // Don't handle Delete/Backspace when editing text fields
@@ -128,22 +133,18 @@ export const PipelineUI = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undo, redo, duplicateSelectedNodes]);
+  }, [undo, redo, duplicateSelectedNodes, closeContextMenu]);
 
   // ── Context menu ──────────────────────────────────────────────────────
 
   const onNodeContextMenu = useCallback((event, node) => {
     event.preventDefault();
-    setContextMenu({
-      x: event.clientX,
-      y: event.clientY,
-      nodeId: node.id,
-    });
-  }, []);
+    openContextMenu(event.clientX, event.clientY, node.id);
+  }, [openContextMenu]);
 
   const onPaneClick = useCallback(() => {
-    setContextMenu(null);
-  }, []);
+    closeContextMenu();
+  }, [closeContextMenu]);
 
   // ── Drop handler ──────────────────────────────────────────────────────
 
@@ -235,7 +236,7 @@ export const PipelineUI = () => {
           x={contextMenu.x}
           y={contextMenu.y}
           nodeId={contextMenu.nodeId}
-          onClose={() => setContextMenu(null)}
+          onClose={() => closeContextMenu()}
           onDelete={(nodeId) => deleteNode(nodeId)}
           onDuplicate={() => duplicateSelectedNodes()}
         />

@@ -198,6 +198,10 @@ export const useStore = create((set, get) => ({
   },
 
   onConnect: (connection) => {
+    // Extract handle name from sourceHandle (format: "nodeId-handleName")
+    const label = connection.sourceHandle
+      ? connection.sourceHandle.replace(connection.source + "-", "")
+      : "";
     set((state) => ({
       edges: addEdge(
         {
@@ -206,6 +210,7 @@ export const useStore = create((set, get) => ({
           animated: true,
           style: EDGE_STYLE,
           markerEnd: EDGE_MARKER,
+          label,
         },
         state.edges,
       ),
@@ -263,6 +268,12 @@ export const useStore = create((set, get) => ({
       { padding: 0.5, duration: 400 },
     );
   },
+
+  // ── Context menu ───────────────────────────────────────────────────────
+
+  contextMenu: null,
+  openContextMenu: (x, y, nodeId) => set({ contextMenu: { x, y, nodeId } }),
+  closeContextMenu: () => set({ contextMenu: null }),
 
   // ── Canvas ──────────────────────────────────────────────────────────────
 

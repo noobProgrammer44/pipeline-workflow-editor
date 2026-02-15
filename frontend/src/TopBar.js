@@ -218,7 +218,6 @@ export const TopBar = () => {
   const {
     pipelineName,
     setPipelineName,
-    savePipeline,
     exportPipeline,
     clearCanvas,
     undo,
@@ -231,7 +230,6 @@ export const TopBar = () => {
     (s) => ({
       pipelineName: s.pipelineName,
       setPipelineName: s.setPipelineName,
-      savePipeline: s.savePipeline,
       exportPipeline: s.exportPipeline,
       clearCanvas: s.clearCanvas,
       undo: s.undo,
@@ -457,20 +455,6 @@ export const TopBar = () => {
 
         <div style={dividerStyle} />
 
-        <button
-          onClick={savePipeline}
-          style={btnStyle}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = '#7C3AED';
-            e.currentTarget.style.color = '#7C3AED';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = '#E2E8F0';
-            e.currentTarget.style.color = '#475569';
-          }}
-        >
-          Save
-        </button>
         <button
           onClick={exportPipeline}
           style={btnStyle}

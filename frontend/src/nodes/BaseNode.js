@@ -110,8 +110,7 @@ const CHECKBOX_STYLE = {
   cursor: 'pointer',
 };
 
-const DELETE_BTN_STYLE = {
-  marginLeft: 'auto',
+const HEADER_BTN_STYLE = {
   background: 'rgba(0,0,0,0.15)',
   border: 'none',
   color: '#fff',
@@ -129,11 +128,23 @@ const DELETE_BTN_STYLE = {
   transition: 'background 0.1s ease',
 };
 
-// ─── Chevron SVG ─────────────────────────────────────────────────────────────
+const DELETE_BTN_STYLE = {
+  ...HEADER_BTN_STYLE,
+  marginLeft: 'auto',
+};
+
+// ─── SVG Icons ───────────────────────────────────────────────────────────────
 
 const ChevronDown = (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M6 9l6 6 6-6" />
+  </svg>
+);
+
+const SettingsIcon = (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
   </svg>
 );
 
@@ -405,6 +416,7 @@ export function BaseNode({ id, data, config }) {
   const updateNodeField = useStore((state) => state.updateNodeField);
   const updateNodeFields = useStore((state) => state.updateNodeFields);
   const deleteNode = useStore((state) => state.deleteNode);
+  const openContextMenu = useStore((state) => state.openContextMenu);
 
   const buildInitialValues = () => {
     const vals = {};
@@ -498,12 +510,29 @@ export function BaseNode({ id, data, config }) {
           {label}
         </span>
         <button
+          onClick={(e) => {
+            e.stopPropagation();
+            const rect = e.currentTarget.getBoundingClientRect();
+            openContextMenu(rect.left, rect.bottom + 4, id);
+          }}
+          style={DELETE_BTN_STYLE}
+          title="Node settings"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(0,0,0,0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(0,0,0,0.15)';
+          }}
+        >
+          {SettingsIcon}
+        </button>
+        <button
           className="node-delete-btn"
           onClick={(e) => {
             e.stopPropagation();
             deleteNode(id);
           }}
-          style={DELETE_BTN_STYLE}
+          style={HEADER_BTN_STYLE}
           title="Delete node"
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'rgba(0,0,0,0.3)';
